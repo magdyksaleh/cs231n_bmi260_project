@@ -52,7 +52,7 @@ class ILDDataset(Dataset):
         ds=pydicom.read_file(slice_path)
         hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
         # if(hu_img.shape != (512,512)):
-        hu_img = transform.resize(hu_img, (64,64), mode='constant')
+        hu_img = transform.resize(hu_img, (32,32), mode='constant')
         label = self.slice_labels[idx][2]
         # sample = {'slice': np.asarray(hu_img), 'label': label}
         sample = (np.asarray(hu_img), label)
