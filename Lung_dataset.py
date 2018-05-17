@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 
 #Create dataset class
 class ILDDataset(Dataset):
-    def __init__(self, csv_file, root_dir, transform=None):
+    def __init__(self, csv_file, root_dir, transform=None, train=False):
         
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
@@ -24,6 +24,7 @@ class ILDDataset(Dataset):
         self.slice_labels = np.asarray(pd.read_csv(csv_file))
         self.root_dir = root_dir
         self.transform = transform
+        self.train = train
     
     def __len__(self):
         return len(self.slice_labels)
@@ -48,12 +49,13 @@ class ILDDataset(Dataset):
          
     def __getitem__(self, idx):
         slice_path = self.find_slice_path(idx)
-        print("final slice_path")
-        print(slice_path)
         ds=pydicom.read_file(slice_path)
         hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
+        # if(hu_img.shape != (512,512)):
+        hu_img = transform.resize(hu_img, (64,64), mode='constant')
         label = self.slice_labels[idx][2]
-        sample = {'slice': hu_img, 'label': label}
+        # sample = {'slice': np.asarray(hu_img), 'label': label}
+        sample = (np.asarray(hu_img), label)
         if self.transform:
             sample = self.transform(sample)
         return sample
