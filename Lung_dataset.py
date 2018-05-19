@@ -21,7 +21,7 @@ class ILDDataset(Dataset):
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
 
-        self.slice_labels = np.asarray(pd.read_csv(csv_file))
+        self.slice_labels = np.asarray(pd.read_csv(csv_file, header=None))
         self.root_dir = root_dir
         self.transform = transform
         self.train = train
@@ -44,17 +44,19 @@ class ILDDataset(Dataset):
                     continue
                 slice_path = os.path.join(scan_path,list_of_slices[slice_num])
                 if (cntr == idx):
-                    return slice_path
+                    return slice_path, int(list_of_scans[scan_num])
                 cntr += 1
          
     def __getitem__(self, idx):
-        slice_path = self.find_slice_path(idx)
+        slice_path, scan_num = self.find_slice_path(idx)
         ds=pydicom.read_file(slice_path)
         hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
         # if(hu_img.shape != (512,512)):
-        hu_img = transform.resize(hu_img, (32,32), mode='constant')
-        label = self.slice_labels[idx][2]
-        # sample = {'slice': np.asarray(hu_img), 'label': label}
+        hu_img = transform.resize(hu_img, (64, 64), mode='constant')
+
+        #grab label
+        label = self.slice_labels[np.where(self.slice_labels[:,0] == scan_num)][0][1]
+        
         sample = (np.asarray(hu_img), label)
         if self.transform:
             sample = self.transform(sample)
