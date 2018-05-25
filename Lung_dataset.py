@@ -25,10 +25,14 @@ class ILDDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         self.train = train
+        if self.train:
+            self.len = 1982 #manually calculated
+        else:
+            self.len = 375 #manually calculated 
         self.mask = mask
     
     def __len__(self):
-        return len(self.slice_labels)
+        return self.len
 
     def find_slice_path(self, idx):
         list_of_scans = os.listdir(self.root_dir)
