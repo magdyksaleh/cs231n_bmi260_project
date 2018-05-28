@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-import os
 import pydicom
 
 # Ignore warnings
@@ -16,7 +15,7 @@ warnings.filterwarnings("ignore")
 
 #Create dataset class
 class ILDDataset(Dataset):
-    def __init__(self, csv_file, root_dir, mask=False,  transform=None, train=False):
+    def __init__(self, csv_file, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64):
         
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
@@ -25,6 +24,8 @@ class ILDDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
         self.train = train
+        self.HU = HU
+        self.resize = resize 
         if self.train:
             self.len = 1982 #manually calculated
         else:
@@ -68,13 +69,17 @@ class ILDDataset(Dataset):
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
         mask_path = self.find_mask_path(scan_path, slice_name)
         ds=pydicom.read_file(slice_path)
-        hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
+        if self.HU:
+            hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
+        else:
+            hu_img = ds.pixel_array
         if ((mask_path is not None )and (self.mask == True)):
             mask=pydicom.read_file(mask_path).pixel_array
+            mask[mask>0] = 1
         else:
             mask=np.ones_like(hu_img)
         filtered_im = np.asarray(hu_img)*np.asarray(mask)
-        filtered_im = transform.resize(filtered_im, (64, 64), mode='constant')
+        filtered_im = transform.resize(filtered_im, (self.resize, self.resize), mode='constant')
 
         #grab label
         label = self.slice_labels[np.where(self.slice_labels[:,0] == scan_num)][0][1]
