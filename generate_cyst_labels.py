@@ -37,9 +37,12 @@ def generate_cyst_mask(root_dir, target_dir):
             if (list_of_slices[slice_num][-4:] != ".dcm"):
                 continue
             
+
+
             slice_name = list_of_slices[slice_num]
             slice_path = os.path.join(scan_path, slice_name)
             mask_path = find_mask_path(scan_path, slice_name)
+            
             mask=np.asarray(pydicom.read_file(mask_path).pixel_array)
             img=pydicom.read_file(slice_path).pixel_array
             mask[mask>0] = 1
@@ -49,7 +52,7 @@ def generate_cyst_mask(root_dir, target_dir):
                 continue
             img_filtered_norm = (img_filtered + abs(np.min(img_filtered)))/(np.max(img_filtered) + abs(np.min(img_filtered))) #normalizing
             
-            thresh =  np.percentile(img_filtered_norm[img_filtered_norm > 0], 35) #produce threshold
+            thresh =  np.percentile(img_filtered_norm[img_filtered_norm > 0], 42) #produce threshold
 
             cysts_im = img_filtered_norm > thresh
             cysts_im = 1*binary_closing(cysts_im)
@@ -93,5 +96,5 @@ generate_cyst_mask(root_dir, target_dir)
 root_dir = root_test_dir
 target_dir = target_test_dir
 
-print("Generating Test Masks")
-generate_cyst_mask(root_dir, target_dir)
+# print("Generating Test Masks")
+# generate_cyst_mask(root_dir, target_dir)
