@@ -25,21 +25,22 @@ def predict_img(net, full_img, gpu=False):
     X_r = torch.FloatTensor(right).unsqueeze(0)
 
     if gpu:
-        X_l = Variable(X_l, volatile=True).cuda()
-        X_r = Variable(X_r, volatile=True).cuda()
+        X_l = Variable(X_l, requires_grad=True).cuda()
+        X_r = Variable(X_r, requires_grad=True).cuda()
     else:
-        X_l = Variable(X_l, volatile=True)
-        X_r = Variable(X_r, volatile=True)
+        X_l = Variable(X_l, requires_grad=True)
+        X_r = Variable(X_r, requires_grad=True)
 
-    y_l = F.sigmoid(net(X_l))
-    y_r = F.sigmoid(net(X_r))
-    y_l = F.upsample_bilinear(y_l, scale_factor=2).data[0][0].cpu().numpy()
-    y_r = F.upsample_bilinear(y_r, scale_factor=2).data[0][0].cpu().numpy()
+    with torch.no_grad():
+        y_l = F.sigmoid(net(X_l))
+        y_r = F.sigmoid(net(X_r))
+        y_l = F.upsample(y_l, scale_factor=2).data[0][0].cpu().numpy()
+        y_r = F.upsample(y_r, scale_factor=2).data[0][0].cpu().numpy()
 
-    y = merge_masks(y_l, y_r, full_img.size[0])
-    yy = dense_crf(np.array(full_img).astype(np.uint8), y)
+        y = merge_masks(y_l, y_r, full_img.size[0])
+        yy = dense_crf(np.array(full_img).astype(np.uint8), y)
 
-    return yy > 0.5
+        return yy > 0.5
 
 
 if __name__ == "__main__":
