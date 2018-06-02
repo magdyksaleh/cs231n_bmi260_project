@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import pydicom
+from scipy.ndimage import imread
 
 # Ignore warnings
 import warnings
@@ -15,22 +16,21 @@ warnings.filterwarnings("ignore")
 
 #Create dataset class
 class ILDDataset(Dataset):
-    def __init__(self, csv_file, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64, batch_size=1):
+    def __init__(self, cystic_path, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64):
         
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
 
-        self.slice_labels = np.asarray(pd.read_csv(csv_file, header=None))
+        self.cystic_path = cystic_path
         self.root_dir = root_dir
-        self.batch_size = batch_size
         self.transform = transform
         self.train = train
         self.HU = HU
         self.resize = resize 
         if self.train:
-            self.len = np.floor(1982/batch_size) #manually calculated
+            self.len = 885 #manually calculated
         else:
-            self.len = np.floor(375/batch_size) #manually calculated 
+            self.len = 162 #manually calculated 
         self.mask = mask
     
     def __len__(self):
@@ -65,10 +65,28 @@ class ILDDataset(Dataset):
                     return os.path.join(mask_path, mask)
             elif((slice_num<10) and (mask[-5:-4].isdigit()) and (int(mask[-5:-4]) == slice_num)):
                 return os.path.join(mask_path, mask)
+
+    def find_cystic_mask_path(self, scan_num, slice_name):
+        mask_path = os.path.join(self.cystic_path, str(scan_num))
+        slice_num = int(slice_name[-6:-4])
+        for mask in os.listdir(mask_path):
+            if (mask[-4:] != ".png"):
+                continue
+            if(mask[-6:-4].isdigit()):
+                if(int(mask[-6:-4]) == slice_num):
+                    return os.path.join(mask_path, mask)
+            elif((slice_num<10) and (mask[-5:-4].isdigit()) and (int(mask[-5:-4]) == slice_num)):
+                return os.path.join(mask_path, mask)
          
     def __getitem__(self, idx):
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
         mask_path = self.find_mask_path(scan_path, slice_name)
+        cyst_mask_path = self.find_cystic_mask_path(scan_num, slice_name)
+
+        print(slice_path)
+        print(mask_path)
+        print(cyst_mask_path)
+
         ds=pydicom.read_file(slice_path)
         if self.HU:
             hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
@@ -83,7 +101,7 @@ class ILDDataset(Dataset):
         filtered_im = transform.resize(filtered_im, (self.resize, self.resize), mode='constant')
 
         #grab label
-        label = self.slice_labels[np.where(self.slice_labels[:,0] == scan_num)][0][1]
+        label = np.asarray(imread(cyst_mask_path))
         sample = (filtered_im, label)
         if self.transform:
             sample = self.transform(sample)

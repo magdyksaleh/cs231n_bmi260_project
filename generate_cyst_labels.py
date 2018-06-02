@@ -37,8 +37,6 @@ def generate_cyst_mask(root_dir, target_dir):
             if (list_of_slices[slice_num][-4:] != ".dcm"):
                 continue
             
-
-
             slice_name = list_of_slices[slice_num]
             slice_path = os.path.join(scan_path, slice_name)
             mask_path = find_mask_path(scan_path, slice_name)
