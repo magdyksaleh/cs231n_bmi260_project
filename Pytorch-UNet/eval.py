@@ -17,6 +17,7 @@ def eval_net(net, loader, device, gpu=False):
         print('Checking accuracy on test set')   
 
     tot = 0
+    cntr = 0
     with torch.no_grad():
         for X, y in loader:
             X = X.to(device=device, dtype=torch.float32)  # move to device, e.g. GPU
@@ -42,7 +43,7 @@ def eval_net(net, loader, device, gpu=False):
 
             dice = dice_coeff(y_pred, y.float()).data[0]
             tot += dice
-
+            cntr += 1
             if 0:
                 X = X.data.squeeze(0).cpu().numpy()
                 X = np.transpose(X, axes=[1, 2, 0])
@@ -63,4 +64,4 @@ def eval_net(net, loader, device, gpu=False):
                 print(Q)
                 ax4.imshow(Q > 0.5)
                 plt.show()
-    return tot / i
+    return tot / cntr

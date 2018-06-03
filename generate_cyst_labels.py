@@ -24,7 +24,7 @@ def find_mask_path(scan_path, slice_name):
             elif((slice_num<10) and (mask[-5:-4].isdigit()) and (int(mask[-5:-4]) == slice_num)):
                 return os.path.join(mask_path, mask)
 
-def generate_cyst_mask(root_dir, target_dir):
+def generate_cyst_mask(root_dir, target_dir, thresh_hu):
     list_of_scans = os.listdir(root_dir)
     num_scans = len(list_of_scans)
     for scan_num in tqdm(range(num_scans)):
@@ -42,19 +42,23 @@ def generate_cyst_mask(root_dir, target_dir):
             mask_path = find_mask_path(scan_path, slice_name)
             
             mask=np.asarray(pydicom.read_file(mask_path).pixel_array)
-            img=pydicom.read_file(slice_path).pixel_array
+            ds = pydicom.read_file(slice_path)
+            img=ds.pixel_array
             mask[mask>0] = 1
             img_filtered = img*mask
+            intercept = ds.RescaleIntercept
+            slope = ds.RescaleSlope
+            img_filtered = img_filtered*slope + intercept
             img_filtered = np.float32(img_filtered)
             if(np.max(img_filtered)==0):
                 continue
-            img_filtered_norm = (img_filtered + abs(np.min(img_filtered)))/(np.max(img_filtered) + abs(np.min(img_filtered))) #normalizing
             
-            thresh =  np.percentile(img_filtered_norm[img_filtered_norm > 0], 42) #produce threshold
+            # img_filtered_norm = (img_filtered + abs(np.min(img_filtered)))/(np.max(img_filtered) + abs(np.min(img_filtered))) #normalizing
+            # thresh =  np.percentile(img_filtered_norm[img_filtered_norm > 0], 42) #produce threshold
 
-            cysts_im = img_filtered_norm > thresh
+            cysts_im = img_filtered <= thresh_hu
             cysts_im = 1*binary_closing(cysts_im)
-            cysts_im += mask
+            cysts_im *= mask
             cysts_im = medfilt(cysts_im)
             
             #need to navigate to correct directory 
@@ -80,16 +84,16 @@ def generate_cyst_mask(root_dir, target_dir):
 
 
 root_train_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/Cystic Dataset/Train"
-target_train_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/cystic_dataset_masks/Train"
+target_train_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/Cystic_masks_new/Train"
 
 root_test_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/Cystic Dataset/Test"
-target_test_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/cystic_dataset_masks/Test"
+target_test_dir = "/Users/magdy/Desktop/Stanford Spring/BMI260/Project/Data/Cystic_masks_new/Test"
 
 root_dir = root_train_dir
 target_dir = target_train_dir
 
 print("Generating Training Masks")
-generate_cyst_mask(root_dir, target_dir)
+generate_cyst_mask(root_dir, target_dir, -916)
 
 root_dir = root_test_dir
 target_dir = target_test_dir
