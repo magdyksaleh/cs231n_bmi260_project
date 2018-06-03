@@ -82,11 +82,6 @@ class ILDDataset(Dataset):
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
         mask_path = self.find_mask_path(scan_path, slice_name)
         cyst_mask_path = self.find_cystic_mask_path(scan_num, slice_name)
-
-        print(slice_path)
-        print(mask_path)
-        print(cyst_mask_path)
-
         ds=pydicom.read_file(slice_path)
         if self.HU:
             hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
@@ -101,7 +96,17 @@ class ILDDataset(Dataset):
         filtered_im = transform.resize(filtered_im, (self.resize, self.resize), mode='constant')
 
         #grab label
-        label = np.asarray(imread(cyst_mask_path))
+        if(cyst_mask_path is None):
+            label = np.zeros_like(filtered_im)
+        else:
+            label = np.asarray(imread(cyst_mask_path))
+            if(len(label.shape) != 2):
+                label = np.sum(label, axis=2)
+
+        label = transform.resize(label, (self.resize, self.resize), mode='constant')
+        # print(slice_path)
+        # print(label.shape)
+        # print(filtered_im.shape)
         sample = (filtered_im, label)
         if self.transform:
             sample = self.transform(sample)

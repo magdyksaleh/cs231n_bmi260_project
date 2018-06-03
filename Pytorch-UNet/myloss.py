@@ -11,7 +11,7 @@ class DiceCoeff(Function):
 
     def forward(self, input, target):
         self.save_for_backward(input, target)
-        self.inter = torch.dot(input, target) + 0.0001
+        self.inter = torch.matmul(input, target) + 0.0001
         self.union = torch.sum(input) + torch.sum(target) + 0.0001
 
         t = 2 * self.inter.float() / self.union.float()
