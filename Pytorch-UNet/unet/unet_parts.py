@@ -19,6 +19,14 @@ class double_conv(nn.Module):
             nn.BatchNorm2d(out_ch),
             nn.ReLU(inplace=True)
         )
+        self.last_conv = nn.Sequential(
+            nn.Conv2d(in_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_ch, out_ch, 3, padding=1),
+            nn.BatchNorm2d(out_ch),
+            nn.Sigmoid(inplace=True)
+        )
 
     def forward(self, x):
         x = self.conv(x)
@@ -78,12 +86,5 @@ class outconv(nn.Module):
         self.conv = nn.Conv2d(in_ch, out_ch, 1)
 
     def forward(self, x):
-        x = nn.Sequential(
-            nn.Conv2d(in_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
-            nn.ReLU(inplace=True),
-            nn.Conv2d(out_ch, out_ch, 3, padding=1),
-            nn.BatchNorm2d(out_ch),
-            nn.Sigmoid(inplace=True)
-        )
+        x = self.last_conv(x)
         return x
