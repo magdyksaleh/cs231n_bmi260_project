@@ -26,6 +26,8 @@ class ILDDataset(Dataset):
         self.train = train
         self.HU = HU
         self.batch_size = 4  
+        self.mean = -126.45765486881133
+        self.std = 137.1736314603319
         self.resize = resize 
         if self.train:
             self.len = 1982 - self.batch_size + 1 #manually calculated
@@ -94,6 +96,7 @@ class ILDDataset(Dataset):
                 mask=np.ones_like(hu_img)
             filtered_im = np.asarray(hu_img)*np.asarray(mask)
             filtered_im = transform.resize(filtered_im, (self.resize, self.resize), mode='constant')
+            filtered_im = (filtered_im - self.mean)/self.std
             filtered_imgs[i, :] = filtered_im
 
         #grab label

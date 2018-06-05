@@ -26,6 +26,8 @@ class ILDDataset(Dataset):
         self.transform = transform
         self.train = train
         self.HU = HU
+        self.mean = -126.45765486881133
+        self.std = 137.1736314603319
         self.resize = resize 
         if self.train:
             self.len = np.floor(1982/batch_size) #manually calculated
@@ -84,6 +86,11 @@ class ILDDataset(Dataset):
 
         #grab label
         label = self.slice_labels[np.where(self.slice_labels[:,0] == scan_num)][0][1]
+
+        #Centering the data:
+
+        filtered_im = (filtered_im - self.mean)/self.std
+
         sample = (filtered_im, label)
         if self.transform:
             sample = self.transform(sample)
