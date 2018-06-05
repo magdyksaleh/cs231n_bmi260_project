@@ -80,6 +80,7 @@ class ILDDataset(Dataset):
          
     def __getitem__(self, idx):
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
+#         print(slice_path)
         mask_path = self.find_mask_path(scan_path, slice_name)
         cyst_mask_path = self.find_cystic_mask_path(scan_num, slice_name)
         ds=pydicom.read_file(slice_path)
