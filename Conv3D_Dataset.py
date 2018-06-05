@@ -28,9 +28,9 @@ class ILDDataset(Dataset):
         self.batch_size = 4  
         self.resize = resize 
         if self.train:
-            self.len = np.floor(1982/self.batch_size) #manually calculated
+            self.len = 1982 - self.batch_size + 1 #manually calculated
         else:
-            self.len = np.floor(375/self.batch_size) #manually calculated 
+            self.len = 375 - self.batch_size +1  #manually calculated 
         self.mask = mask
     
     def __len__(self):
@@ -87,7 +87,7 @@ class ILDDataset(Dataset):
                 hu_img = ds.RescaleIntercept + ds.pixel_array*ds.RescaleSlope
             else:
                 hu_img = ds.pixel_array
-            if ((mask_path[i] is not None )and (self.mask == True)):
+            if ((mask_path is not None )and (self.mask == True)):
                 mask=pydicom.read_file(mask_path).pixel_array
                 mask[mask>0] = 1
             else:
