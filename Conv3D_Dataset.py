@@ -47,6 +47,16 @@ class ILDDataset(Dataset):
             if (not os.path.isdir(scan_path)) or (list_of_scans[scan_num] == "HRCT_pilot"):
                 continue
             list_of_slices = os.listdir(scan_path)
+            try:
+                list_of_slices.remove("_listing")
+            except ValueError:
+                pass
+            
+            try:
+                list_of_slices.remove("_DS_Store")
+            except ValueError:
+                pass
+            
             list_of_slices.sort()
             num_slices = len(list_of_slices)
             slice_cntr = 0
@@ -79,6 +89,17 @@ class ILDDataset(Dataset):
         filtered_imgs = np.zeros((4, self.resize, self.resize))
         slice_path, scan_num, scan_path, slice_num, mask_idx = self.find_slice_path(idx)
         list_of_slices = os.listdir(scan_path)
+        
+        try:
+            list_of_slices.remove("_listing")
+        except ValueError:
+            pass
+            
+        try:
+            list_of_slices.remove("_DS_Store")
+        except ValueError:
+            pass
+        
         list_of_slices.sort()
         for i in range(self.batch_size):
             if(i != 0):
