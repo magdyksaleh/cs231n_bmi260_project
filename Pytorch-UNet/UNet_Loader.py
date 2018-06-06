@@ -103,6 +103,7 @@ class ILDDataset(Dataset):
             label = np.asarray(imread(cyst_mask_path))
             if(len(label.shape) != 2):
                 label = np.sum(label, axis=2)
+                label = (label > 0)
 
         label = transform.resize(label, (self.resize, self.resize), mode='constant')
         # print(slice_path)
