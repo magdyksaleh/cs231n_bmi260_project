@@ -79,6 +79,7 @@ class ILDDataset(Dataset):
                 return os.path.join(mask_path, mask)
          
     def __getitem__(self, idx):
+#         print(idx)
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
 #         print(slice_path)
         mask_path = self.find_mask_path(scan_path, slice_name)
@@ -106,7 +107,7 @@ class ILDDataset(Dataset):
                 label = (label > 0)
 
         label = transform.resize(label, (self.resize, self.resize), mode='constant')
-        # print(slice_path)
+#         print(slice_path)
         # print(label.shape)
         # print(filtered_im.shape)
         sample = (filtered_im, label)
