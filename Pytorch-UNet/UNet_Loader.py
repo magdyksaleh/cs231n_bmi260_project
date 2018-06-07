@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore")
 
 #Create dataset class
 class ILDDataset(Dataset):
-    def __init__(self, cystic_path, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64):
+    def __init__(self, cystic_path, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64, verbose=False):
         
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
@@ -26,11 +26,12 @@ class ILDDataset(Dataset):
         self.transform = transform
         self.train = train
         self.HU = HU
+        self.verbose = verbose
         self.resize = resize 
         if self.train:
-            self.len = 885 #manually calculated
+            self.len = 830 #manually calculated
         else:
-            self.len = 162 #manually calculated 
+            self.len = 151 #manually calculated 
         self.mask = mask
     
     def __len__(self):
@@ -81,7 +82,8 @@ class ILDDataset(Dataset):
     def __getitem__(self, idx):
 #         print(idx)
         slice_path, scan_num, slice_num, scan_path, slice_name = self.find_slice_path(idx)
-#         print(slice_path)
+        if(self.verbose):
+            print(slice_path)
         mask_path = self.find_mask_path(scan_path, slice_name)
         cyst_mask_path = self.find_cystic_mask_path(scan_num, slice_name)
         ds=pydicom.read_file(slice_path)
@@ -104,8 +106,9 @@ class ILDDataset(Dataset):
             label = np.asarray(imread(cyst_mask_path))
             if(len(label.shape) != 2):
                 label = np.sum(label, axis=2)
-                label = (label > 0)
-
+                label = (label - np.mean(label))/np.std(label)
+                label = label > 0
+                
         label = transform.resize(label, (self.resize, self.resize), mode='constant')
 #         print(slice_path)
         # print(label.shape)
