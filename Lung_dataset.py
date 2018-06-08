@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 
 #Create dataset class
 class ILDDataset(Dataset):
-    def __init__(self, csv_file, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64, batch_size=1, length=None):
+    def __init__(self, csv_file, root_dir, mask=False,  transform=None, train=False, HU=True, resize=64, batch_size=1):
         
         #args: csv_file path and filename of file
         #      root_Dir dir to dataset
@@ -28,10 +28,8 @@ class ILDDataset(Dataset):
         self.HU = HU
         self.mean = -126.45765486881133
         self.std = 137.1736314603319
-        self.resize = resize
-        if(length is not None):
-            self.len = length
-        elif self.train:
+        self.resize = resize 
+        if self.train:
             self.len = np.floor(1982/batch_size) #manually calculated
         else:
             self.len = np.floor(375/batch_size) #manually calculated 
